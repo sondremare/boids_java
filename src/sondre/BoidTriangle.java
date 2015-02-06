@@ -7,8 +7,8 @@ import math.Vector;
 public class BoidTriangle extends Polygon {
     Vector position = new Vector();
     Vector velocity = new Vector();
-    Double[] points = new Double[]{0.0, 0.0, 4.0, 4.0, 8.0, 0.0, 4.0, 20.0};
-    //Double[] points = new Double[]{8.0, 8.0, 4.0, 4.0, 0.0, 0.0, 4.0, 20.0, 8.0, 0.0};
+    //Double[] points = new Double[]{0.0, 0.0, 4.0, 4.0, 8.0, 0.0, 4.0, 20.0};
+    Double[] points = new Double[]{16.0, 16.0, 8.0, 8.0, 0.0, 0.0, 8.0, 40.0, 16.0, 0.0};
     Color color = Color.GREEN;
 
     public BoidTriangle() {

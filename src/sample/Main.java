@@ -3,19 +3,27 @@ package sample;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import math.Vector;
 import sondre.Boid;
-import sondre.BoidTriangle;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -34,30 +42,133 @@ public class Main extends Application {
     static ArrayList<Boid> boids = new ArrayList<Boid>();
     //static ArrayList<BoidTriangle> boids = new ArrayList<BoidTriangle>();
     public static Pane canvas;
+    public static GridPane gridPane;
+    public static GridPane controlDashboard;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        canvas = new GridPane();
-        final Scene scene = new Scene(canvas);
+
+        gridPane = new GridPane();
+        gridPane.setPrefSize(800, 600);
+
+        canvas = new Pane();
+        canvas.setPrefSize(800, 450);
         canvas.setStyle("-fx-background-color: black;");
+        gridPane.add(canvas, 0, 0);
+
+        controlDashboard = new GridPane();
+        controlDashboard.setPrefSize(800, 150);
+        controlDashboard.setStyle("-fx-background-color: lightgrey;");
+
+        GridPane sliderGrid = new GridPane();
+        sliderGrid.setPrefSize(800, 100);
+
+        sliderGrid.getColumnConstraints().add(new ColumnConstraints(150));
+        sliderGrid.getColumnConstraints().add(new ColumnConstraints(500));
+        sliderGrid.getColumnConstraints().add(new ColumnConstraints(150));
+
+        Label separationLabel = new Label("Separation weight: ");
+        separationLabel.setMinWidth(150);
+        separationLabel.setAlignment(Pos.CENTER_RIGHT);
+        Slider separationSlider = new Slider(0, 10, SEPARATION_WEIGHT);
+        separationSlider.setBlockIncrement(0.1);
+        separationSlider.setStyle("-fx-padding: 10px");
+        final Label separationValue = new Label(Double.toString(separationSlider.getValue()));
+        sliderGrid.add(separationLabel, 0, 0);
+        sliderGrid.add(separationSlider, 1, 0);
+        sliderGrid.add(separationValue, 2, 0);
+
+        separationSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number oldVal, Number newVal) {
+                SEPARATION_WEIGHT = newVal.doubleValue();
+                separationValue.setText(String.format("%.1f", newVal));
+            }
+        });
+
+        Label alignmentLabel = new Label("Alignment weight: ");
+        alignmentLabel.setMinWidth(150);
+        alignmentLabel.setAlignment(Pos.CENTER_RIGHT);
+        Slider alignmentSlider = new Slider(0, 10, ALIGNMENT_WEIGHT);
+        alignmentSlider.setBlockIncrement(0.1);
+        alignmentSlider.setStyle("-fx-padding: 10px");
+        final Label alignmentValue = new Label(Double.toString(alignmentSlider.getValue()));
+        sliderGrid.add(alignmentLabel, 0, 1);
+        sliderGrid.add(alignmentSlider, 1, 1);
+        sliderGrid.add(alignmentValue, 2, 1);
+
+        alignmentSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number oldVal, Number newVal) {
+                ALIGNMENT_WEIGHT = newVal.doubleValue();
+                alignmentValue.setText(String.format("%.1f", newVal));
+            }
+        });
+
+        Label cohesionLabel = new Label("Cohesion weight: ");
+        cohesionLabel.setMinWidth(150);
+        cohesionLabel.setAlignment(Pos.CENTER_RIGHT);
+        Slider cohesionSlider = new Slider(0, 10, COHESION_WEIGHT);
+        cohesionSlider.setBlockIncrement(0.1);
+        cohesionSlider.setStyle("-fx-padding: 10px");
+        final Label cohesionValue = new Label(Double.toString(cohesionSlider.getValue()));
+        sliderGrid.add(cohesionLabel, 0, 2);
+        sliderGrid.add(cohesionSlider, 1, 2);
+        sliderGrid.add(cohesionValue, 2, 2);
+
+        cohesionSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number oldVal, Number newVal) {
+                COHESION_WEIGHT = newVal.doubleValue();
+                cohesionValue.setText(String.format("%.1f", newVal));
+            }
+        });
+
+        controlDashboard.add(sliderGrid, 0, 0);
+
+        GridPane buttonGrid = new GridPane();
+        buttonGrid.setPrefSize(800, 50);
+
+        buttonGrid.getColumnConstraints().add(new ColumnConstraints(200));
+        buttonGrid.getColumnConstraints().add(new ColumnConstraints(200));
+        buttonGrid.getColumnConstraints().add(new ColumnConstraints(200));
+        buttonGrid.getColumnConstraints().add(new ColumnConstraints(200));
+
+        Label obstaclesLabel = new Label("Obstacles");
+        obstaclesLabel.setStyle("-fx-padding: 10px;");
+        obstaclesLabel.setMinWidth(400);
+        obstaclesLabel.setAlignment(Pos.CENTER);
+        Button addObstacleButton = new Button("Add obstacle");
+        addObstacleButton.setMinWidth(200);
+        Button removeObstaclesButton = new Button("Remove obstacles");
+        removeObstaclesButton.setMinWidth(200);
+        buttonGrid.add(obstaclesLabel, 0, 0, 2, 1);
+        buttonGrid.add(addObstacleButton, 0, 1);
+        buttonGrid.add(removeObstaclesButton, 1, 1);
+
+        Label predatorsLabel = new Label("Predators");
+        predatorsLabel.setStyle("-fx-padding: 10px;");
+        predatorsLabel.setMinWidth(400);
+        predatorsLabel.setAlignment(Pos.CENTER);
+        Button addPredatorButton = new Button("Add predator");
+        addPredatorButton.setMinWidth(200);
+        Button removePredatorButton = new Button("Remove predators");
+        removePredatorButton.setMinWidth(200);
+        buttonGrid.add(predatorsLabel, 2, 0, 2, 1);
+        buttonGrid.add(addPredatorButton, 2, 1);
+        buttonGrid.add(removePredatorButton, 3, 1);
+
+        controlDashboard.add(buttonGrid, 0, 1);
+
+        gridPane.add(controlDashboard, 0, 1);
+
+        Scene scene = new Scene(gridPane, 800, 600);
         primaryStage.setTitle("Game");
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        Slider separationSlider = new Slider(0, 10, SEPARATION_WEIGHT);
-        separationSlider.setShowTickLabels(true);
-        separationSlider.setBlockIncrement(0.1);
-
-        Slider alignmentSlider = new Slider(0, 10, ALIGNMENT_WEIGHT);
-        alignmentSlider.setShowTickLabels(true);
-        alignmentSlider.setBlockIncrement(0.1);
-
-        Slider cohesionSlider = new Slider(0, 10, COHESION_WEIGHT);
-        cohesionSlider.setShowTickLabels(true);
-        cohesionSlider.setBlockIncrement(0.1);
-
         Random random = new Random();
-        for (int i = 0; i < 156; i++) {
+        for (int i = 0; i < 10; i++) {
             double xSpeed = random.nextDouble()*8 - 4;
             double ySpeed = random.nextDouble()*8 - 4;
             Boid boid = new Boid(RADIUS, COLOR);
