@@ -20,24 +20,27 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import math.Vector;
 import sondre.Boid;
+import sondre.BoidTriangle;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 public class Main extends Application {
     public static double RADIUS = 5;
-    public static double NEIGHBOUR_RADIUS = 35;
-    public static double DESIRED_SEPARATION_RADIUS = 10;
+    public static double NEIGHBOUR_RADIUS = 50;
+    public static double DESIRED_SEPARATION_RADIUS = 15;
     public static double SEPARATION_WEIGHT = 4;
-    public static double ALIGNMENT_WEIGHT = 1;
-    public static double COHESION_WEIGHT = 3;
+    public static double ALIGNMENT_WEIGHT = 4;
+    public static double COHESION_WEIGHT = 0.5;
 
-    public static double MAX_SPEED = 3;
-    public static double MAX_FORCE = 0.10;
+    public static double MAX_SPEED = 2;
+    public static double MAX_FORCE = 0.05;
     Color COLOR = Color.GREEN;
     static ArrayList<Boid> boids = new ArrayList<Boid>();
     //static ArrayList<BoidTriangle> boids = new ArrayList<BoidTriangle>();
@@ -168,7 +171,7 @@ public class Main extends Application {
         primaryStage.show();
 
         Random random = new Random();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             double xSpeed = random.nextDouble()*8 - 4;
             double ySpeed = random.nextDouble()*8 - 4;
             Boid boid = new Boid(RADIUS, COLOR);
@@ -217,22 +220,16 @@ public class Main extends Application {
                                 separation.divide(separation_count);
                             }
                             if (alignment_count > 0) {
-                                alignment.divide(alignment_count);
+                                alignment.divide(alignment_count).limit(MAX_FORCE);
                             }
                             if (cohesion_count > 0) {
                                 cohesion.divide(cohesion_count);
-                                cohesion = currentBoid.steer(cohesion.divide(cohesion_count));
+                                cohesion = currentBoid.steer(cohesion);
                             }
 
                             separation.multiply(SEPARATION_WEIGHT);
-                            alignment.multiply(ALIGNMENT_WEIGHT).limit(Main.MAX_FORCE);
-                            cohesion.multiply(COHESION_WEIGHT).limit(Main.MAX_FORCE);
-                            currentBoid.setVelocity(
-                                    currentBoid.getVelocity()
-                                            .add(separation)
-                                            .add(alignment)
-                                            .add(cohesion)
-                                            .limit(MAX_SPEED));
+                            alignment.multiply(ALIGNMENT_WEIGHT);
+                            cohesion.multiply(COHESION_WEIGHT);
 
                             boolean outsideRightEdge = currentBoid.getPosition().getX() >= bounds.getMaxX();
                             boolean outsideLeftEdge = currentBoid.getPosition().getX() <= bounds.getMinX();
@@ -249,6 +246,10 @@ public class Main extends Application {
                                 currentBoid.getPosition().setY(bounds.getMaxY());
                             }
                             /* Updating position/layout based on velocity */
+                            Vector changeInVelocity = Vector.add(separation, alignment).add(cohesion);
+                            //double angle = currentBoid.getVelocity().angleInDegrees(changeInVelocity);
+                            //currentBoid.setRotate(angle);
+                            currentBoid.setVelocity(currentBoid.getVelocity().add(changeInVelocity).limit(MAX_SPEED));
                             currentBoid.setPosition(currentBoid.getPosition().add(currentBoid.getVelocity()));
                             currentBoid.setLayoutX(currentBoid.getPosition().getX());
                             currentBoid.setLayoutY(currentBoid.getPosition().getY());

@@ -30,10 +30,11 @@ public class Boid extends Circle {
     }
 
     public Vector steer(Vector target) {
-        Vector desired = Vector.subtract(this.getPosition(), target);
+        Vector desired = Vector.subtract(target, this.getPosition());
         if (desired.magnitude() > 0) {
-            desired.limit(Main.MAX_SPEED);
-            return desired.subtract(this.getVelocity());
+            desired.normalize();
+            desired.multiply(Main.MAX_SPEED);
+            return desired.subtract(this.getVelocity()).limit(Main.MAX_FORCE);
         }
         return new Vector();
 
