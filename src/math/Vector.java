@@ -1,7 +1,5 @@
 package math;
 
-import sun.nio.cs.ext.MacThai;
-
 public class Vector {
     private double x;
     private double y;
@@ -85,11 +83,10 @@ public class Vector {
         return Math.sqrt(Math.pow(this.x - v.getX(), 2) + Math.pow(this.y - v.getY(), 2));
     }
 
-    public double angleInDegrees(Vector v) {
-        double dotProduct = this.dotProduct(v);
-        double distanceThis = this.magnitude();
-        double distanceV = v.magnitude();
+    public double angleInDegrees() {
+        Vector v = new Vector(0,1);
         double angleRadians = Math.acos(this.dotProduct(v) / (this.magnitude() * v.magnitude()));
+        if (this.getX() >= 0) angleRadians *= -1;
         return angleRadians * (180 / Math.PI);
     }
 
