@@ -20,6 +20,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
@@ -34,15 +35,18 @@ import java.util.Random;
 public class Main extends Application {
     public static double RADIUS = 5;
     public static double NEIGHBOUR_RADIUS = 50;
+    public static double OBSTACLE_AVOIDANCE_RADIUS = 30;
     public static double DESIRED_SEPARATION_RADIUS = 15;
-    public static double SEPARATION_WEIGHT = 4;
+    public static double SEPARATION_WEIGHT = 5;
     public static double ALIGNMENT_WEIGHT = 4;
-    public static double COHESION_WEIGHT = 0.5;
+    public static double AVOIDANCE_WEIGHT = 2;
+    public static double COHESION_WEIGHT = 1.5;
 
     public static double MAX_SPEED = 2;
     public static double MAX_FORCE = 0.05;
     Color COLOR = Color.GREEN;
     static ArrayList<Boid> boids = new ArrayList<Boid>();
+    static ArrayList<Circle> obstacles = new ArrayList<Circle>();
     //static ArrayList<BoidTriangle> boids = new ArrayList<BoidTriangle>();
     public static Pane canvas;
     public static GridPane gridPane;
@@ -143,8 +147,32 @@ public class Main extends Application {
         obstaclesLabel.setAlignment(Pos.CENTER);
         Button addObstacleButton = new Button("Add obstacle");
         addObstacleButton.setMinWidth(200);
+        addObstacleButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Random random = new Random();
+                Bounds bounds = canvas.getBoundsInLocal();
+                Circle obstacle = new Circle(10, Color.WHITE);
+                obstacle.setLayoutX(bounds.getMaxX()*random.nextDouble());
+                obstacle.setLayoutY(bounds.getMaxY()*random.nextDouble());
+                canvas.getChildren().add(obstacle);
+                obstacles.add(obstacle);
+
+            }
+        });
         Button removeObstaclesButton = new Button("Remove obstacles");
         removeObstaclesButton.setMinWidth(200);
+        removeObstaclesButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if (obstacles != null && obstacles.size() > 0) {
+                    for (Circle obstacle : obstacles) {
+                        canvas.getChildren().remove(obstacle);
+                    }
+                    obstacles = new ArrayList<Circle>();
+                }
+            }
+        });
         buttonGrid.add(obstaclesLabel, 0, 0, 2, 1);
         buttonGrid.add(addObstacleButton, 0, 1);
         buttonGrid.add(removeObstaclesButton, 1, 1);
@@ -171,18 +199,20 @@ public class Main extends Application {
         primaryStage.show();
 
         Random random = new Random();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 150; i++) {
             double xSpeed = random.nextDouble()*8 - 4;
             double ySpeed = random.nextDouble()*8 - 4;
             Boid boid = new Boid(RADIUS, COLOR);
+            //boid.setStyle("-fx-background-image: ");
             //BoidTriangle boid = new BoidTriangle();
             boid.getPosition().setX(random.nextDouble() * 400);
             boid.getPosition().setY(random.nextDouble() * 300);
             //boid.getPosition().setX(0);
             //boid.getPosition().setY(0);
-            //boid.getVelocity().setX(xSpeed);
-            //boid.getVelocity().setY(ySpeed);
+            boid.getVelocity().setX(xSpeed);
+            boid.getVelocity().setY(ySpeed);
             canvas.getChildren().add(boid);
+
             boids.add(boid);
         }
 
@@ -216,6 +246,22 @@ public class Main extends Application {
                                 }
 
                             }
+                            double closestObstacleDistance = Integer.MAX_VALUE;
+                            Vector avoidance = new Vector();
+                            for (Circle obstacle : obstacles) {
+                                Vector obstaclePosition = new Vector(obstacle.getLayoutX(), obstacle.getLayoutY());
+                                double distance = currentBoid.getPosition().distance(obstaclePosition);
+                                if (distance < OBSTACLE_AVOIDANCE_RADIUS) {
+                                    Vector collisionVector = new Vector(currentBoid.getVelocity()).normalize().multiply(distance);
+                                    if (collisionVector.add(currentBoid.getPosition()).distance(obstaclePosition) <= obstacle.getRadius() + currentBoid.getRadius()) {
+                                        if (distance < closestObstacleDistance) {
+                                            closestObstacleDistance = distance;
+                                            avoidance = new Vector(collisionVector);
+                                            avoidance.subtract(obstaclePosition).normalize();
+                                        }
+                                    }
+                                }
+                            }
                             if (separation_count > 0) {
                                 separation.divide(separation_count);
                             }
@@ -230,6 +276,7 @@ public class Main extends Application {
                             separation.multiply(SEPARATION_WEIGHT);
                             alignment.multiply(ALIGNMENT_WEIGHT);
                             cohesion.multiply(COHESION_WEIGHT);
+                            avoidance.multiply(AVOIDANCE_WEIGHT);
 
                             boolean outsideRightEdge = currentBoid.getPosition().getX() >= bounds.getMaxX();
                             boolean outsideLeftEdge = currentBoid.getPosition().getX() <= bounds.getMinX();
@@ -246,7 +293,7 @@ public class Main extends Application {
                                 currentBoid.getPosition().setY(bounds.getMaxY());
                             }
                             /* Updating position/layout based on velocity */
-                            Vector changeInVelocity = Vector.add(separation, alignment).add(cohesion);
+                            Vector changeInVelocity = Vector.add(separation, alignment).add(cohesion).add(avoidance);
                             //double angle = currentBoid.getVelocity().angleInDegrees(changeInVelocity);
                             //currentBoid.setRotate(angle);
                             currentBoid.setVelocity(currentBoid.getVelocity().add(changeInVelocity).limit(MAX_SPEED));
