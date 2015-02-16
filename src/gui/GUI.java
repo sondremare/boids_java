@@ -139,10 +139,10 @@ public class GUI {
             public void handle(ActionEvent actionEvent) {
                 ArrayList<Circle> obstacles = BoidGame.getObstacles();
                 if (obstacles != null && obstacles.size() > 0) {
-                    for (Circle obstacle : obstacles) {
-                        canvas.getChildren().remove(obstacle);
+                    while (obstacles.size() > 0) {
+                        canvas.getChildren().remove(obstacles.get(0));
+                        BoidGame.getObstacles().remove(0);
                     }
-                    BoidGame.setObstacles(new ArrayList<Circle>());
                 }
             }
         });
@@ -161,11 +161,10 @@ public class GUI {
             public void handle(ActionEvent actionEvent) {
                 Random random = new Random();
                 Bounds bounds = canvas.getBoundsInLocal();
-                Predator predator = new Predator(7, Color.RED);
-                predator.setLayoutX(bounds.getMaxX()*random.nextDouble());
-                predator.setLayoutY(bounds.getMaxY()*random.nextDouble());
+                Predator predator = new Predator(BoidGame.PREDATOR_RADIUS, Color.RED);
                 canvas.getChildren().add(predator);
-                BoidGame.getPredators().add(predator);
+                BoidGame.getPredators().add(predator); //Adding to predator list for reference
+                BoidGame.getBoids().add(predator); //Adding to boid list to utilize inheritance
             }
         });
         Button removePredatorButton = new Button("Remove predators");
@@ -175,10 +174,12 @@ public class GUI {
             public void handle(ActionEvent actionEvent) {
                 ArrayList<Predator> predators = BoidGame.getPredators();
                 if (predators != null && predators.size() > 0) {
-                    for (Predator predator : predators) {
+                    while(predators.size() > 0) {
+                        Predator predator = predators.get(0);
                         canvas.getChildren().remove(predator);
+                        BoidGame.getPredators().remove(predator);
+                        BoidGame.getBoids().remove(predator);
                     }
-                    BoidGame.setPredators(new ArrayList<Predator>());
                 }
             }
         });

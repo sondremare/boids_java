@@ -1,9 +1,12 @@
 package application;
 
+import gui.GUI;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.transform.Rotate;
 import math.Vector;
+
+import java.util.Random;
 
 public class Boid extends Polygon {
     Vector position = new Vector();
@@ -13,6 +16,8 @@ public class Boid extends Polygon {
     private double neighbourRadius;
     private double obstacleAvoidanceRadius;
     private double desiredSeparationRadius;
+    private double maxSpeed = 2;
+    private double maxForce = 0.05;
 
     public Boid() {
 
@@ -23,11 +28,31 @@ public class Boid extends Polygon {
         this.neighbourRadius = radius * 10;
         this.obstacleAvoidanceRadius = radius * 6;
         this.desiredSeparationRadius = radius * 3;
+
         Double[] points = new Double[]{(-0.6 * radius), (-0.8 * radius), (0.0), (1.0 * radius), (0.6 * radius), (-0.8 * radius), (0.0), (-0.4 * radius)};
         this.getPoints().addAll(points);
+
+        Random random = new Random();
+        getPosition().setX(random.nextDouble() * GUI.getCanvas().getBoundsInParent().getMaxX());
+        getPosition().setY(random.nextDouble() * GUI.getCanvas().getBoundsInParent().getMaxY());
+        getVelocity().setX(random.nextDouble() * maxSpeed * 2 - maxSpeed);
+        getVelocity().setY(random.nextDouble() * maxSpeed * 2 - maxSpeed);
+
         rotationTransform = new Rotate();
-        setFill(color);
         getTransforms().add(rotationTransform);
+        setFill(color);
+    }
+
+    public double getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    public double getMaxForce() {
+        return maxForce;
     }
 
     public double getNeighbourRadius() {
@@ -70,8 +95,8 @@ public class Boid extends Polygon {
         Vector desired = Vector.subtract(target, this.getPosition());
         if (desired.magnitude() > 0) {
             desired.normalize();
-            desired.multiply(BoidGame.MAX_SPEED);
-            return desired.subtract(this.getVelocity()).limit(BoidGame.MAX_FORCE);
+            desired.multiply(maxSpeed);
+            return desired.subtract(this.getVelocity()).limit(maxForce);
         }
         return new Vector();
     }
