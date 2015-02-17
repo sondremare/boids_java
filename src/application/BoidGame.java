@@ -70,7 +70,6 @@ public class BoidGame extends Application {
                                     cohesion.add(otherBoid.getPosition());
                                     alignment_count++;
                                     cohesion_count++;
-
                                 }
                             }
                             double closestObstacleDistance = Integer.MAX_VALUE;
